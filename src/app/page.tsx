@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, ArrowDown } from "lucide-react";
 import React from "react";
-import { blogs } from "@/app/api/route";
+import { blogs } from "@/lib/data/blogs";
 
 const DESKTOP_POSTS_PER_PAGE = 9;
 const MOBILE_POSTS_PER_PAGE = 3;

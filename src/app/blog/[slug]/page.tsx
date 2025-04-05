@@ -5,8 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
 import Image from "next/image";
-import { blogs } from "@/app/api/route";
 import { useState } from "react";
+import { blogs } from "@/lib/data/blogs";
 
 export default function BlogDetail({ params }: any) {
   const blog = blogs.find((b) => b.slug === params.slug);
