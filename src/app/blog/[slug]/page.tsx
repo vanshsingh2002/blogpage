@@ -5,7 +5,7 @@ import { ArrowDown } from "lucide-react";
 import Image from "next/image";
 import { blogs } from "@/app/api/route";
 
-export default function BlogDetail({ params }: { params: { slug: string } }) {
+export default function BlogDetail({ params }: any) {
   const blog = blogs.find((b) => b.slug === params.slug);
 
   if (!blog) return notFound();
@@ -67,7 +67,7 @@ export default function BlogDetail({ params }: { params: { slug: string } }) {
             ))}
 
           {/* In this article */}
-          {articleList && articleList.length>0 && (
+          {articleList && articleList.length > 0 && (
             <div className="bg-white border border-[#e1dbee] rounded-lg p-4">
               <p className="font-semibold text-2xl mb-2">In this article</p>
               <ul className="list-decimal list-inside pl-4 space-y-1">
