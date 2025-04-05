@@ -1,103 +1,182 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
+import { BlogCard } from "@/components/BlogCard";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+} from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Search, ArrowDown } from "lucide-react";
+import React from "react";
+import { blogs } from "@/app/api/route";
+
+const DESKTOP_POSTS_PER_PAGE = 9;
+const MOBILE_POSTS_PER_PAGE = 3;
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isMobile, setIsMobile] = useState(false);
+  const [visiblePosts, setVisiblePosts] = useState(MOBILE_POSTS_PER_PAGE);
+  const [search, setSearch] = useState("");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  // ✅ Flatten searchable blog data
+  const filteredPosts = blogs.filter((post) =>
+    post.title.toLowerCase().includes(search.toLowerCase())
+  );
+
+  // Detect mobile view
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkIfMobile();
+    window.addEventListener("resize", checkIfMobile);
+    return () => window.removeEventListener("resize", checkIfMobile);
+  }, []);
+
+  // Posts per view
+  const postsPerPage = isMobile ? visiblePosts : DESKTOP_POSTS_PER_PAGE;
+  const totalPages = Math.ceil(filteredPosts.length / DESKTOP_POSTS_PER_PAGE);
+
+  const currentPosts = isMobile
+    ? filteredPosts.slice(0, visiblePosts)
+    : filteredPosts.slice(
+        (currentPage - 1) * DESKTOP_POSTS_PER_PAGE,
+        currentPage * DESKTOP_POSTS_PER_PAGE
+      );
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleLoadMore = () => {
+    setVisiblePosts((prev) => prev + MOBILE_POSTS_PER_PAGE);
+  };
+
+  const getVisiblePages = () => {
+    const visiblePages = [];
+    visiblePages.push(1);
+
+    for (
+      let i = Math.max(2, currentPage - 1);
+      i <= Math.min(totalPages - 1, currentPage + 1);
+      i++
+    ) {
+      if (!visiblePages.includes(i)) {
+        visiblePages.push(i);
+      }
+    }
+
+    if (totalPages > 1 && !visiblePages.includes(totalPages)) {
+      visiblePages.push(totalPages);
+    }
+
+    return visiblePages.sort((a, b) => a - b);
+  };
+
+  const visiblePages = getVisiblePages();
+  const hasMorePosts = isMobile && visiblePosts < filteredPosts.length;
+
+  return (
+    <>
+      <section className="bg-[#faf7ff] text-center py-12 px-4 md:py-16">
+        <div className="max-w-3xl mx-auto">
+          <span className="bg-[#f3ebff] text-[#6c3ea3] text-xs md:text-sm font-medium px-2 md:px-3 py-1 rounded-full">
+            {isMobile ? "Pricing plans" : "Our blog"}
+          </span>
+
+          <h1 className="text-3xl md:text-5xl font-semibold text-[#43267e] mt-3 md:mt-4">
+            Resources and insights
+          </h1>
+
+          <p className="text-[#8257c0] mt-4 md:mt-6 text-sm md:text-xl">
+            The latest industry news, interviews, technologies, and resources.
+          </p>
+
+          <div className="mt-6 relative max-w-xs md:max-w-md mx-auto">
+            <Input
+              type="text"
+              placeholder="Search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 md:py-3 text-sm md:text-base rounded-lg shadow-sm border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#8257c0]"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            <Search
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={18}
+            />
+          </div>
+        </div>
+      </section>
+
+      <main className="bg-[#faf7ff] py-12 px-4 sm:px-6 md:px-8 lg:px-12">
+        <div className="container">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[32px] justify-center mb-12">
+            {currentPosts.map((post, index) => (
+              <BlogCard
+                key={index}
+                title={post.title}
+                description={post.description}
+                author={post.author.name}
+                date={post.date}
+                category={post.category}
+                imageUrl={post.imageUrl}
+                slug={post.slug}
+              />
+            ))}
+          </div>
+
+          {!isMobile && (
+            <Pagination>
+              <PaginationContent>
+                {visiblePages.map((page, index) => (
+                  <React.Fragment key={page}>
+                    {index > 0 && page - visiblePages[index - 1] > 1 && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationLink
+                        href="#"
+                        isActive={page === currentPage}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handlePageChange(page);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        {page}
+                      </PaginationLink>
+                    </PaginationItem>
+                  </React.Fragment>
+                ))}
+              </PaginationContent>
+            </Pagination>
+          )}
+
+          {isMobile && hasMorePosts && (
+            <div className="flex justify-center mt-8">
+              <Button
+                onClick={handleLoadMore}
+                variant="outline"
+                className="px-6 py-3 w-full bg-[#ece5f6] text-[#8a43ed]"
+              >
+                <ArrowDown />
+                Load More
+              </Button>
+            </div>
+          )}
         </div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+    </>
   );
 }
