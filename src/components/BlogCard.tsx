@@ -15,7 +15,7 @@ interface BlogCardProps {
   date: string;
   category: string;
   imageUrl: string;
-  slug: string; // ✅ Accept slug directly
+  slug: string;
 }
 
 export function BlogCard({

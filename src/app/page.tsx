@@ -24,12 +24,10 @@ export default function Home() {
   const [visiblePosts, setVisiblePosts] = useState(MOBILE_POSTS_PER_PAGE);
   const [search, setSearch] = useState("");
 
-  // ✅ Flatten searchable blog data
   const filteredPosts = blogs.filter((post) =>
     post.title.toLowerCase().includes(search.toLowerCase())
   );
 
-  // Detect mobile view
   useEffect(() => {
     const checkIfMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -40,7 +38,6 @@ export default function Home() {
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
 
-  // Posts per view
   const postsPerPage = isMobile ? visiblePosts : DESKTOP_POSTS_PER_PAGE;
   const totalPages = Math.ceil(filteredPosts.length / DESKTOP_POSTS_PER_PAGE);
 

@@ -1,9 +1,12 @@
+"use client";
+
 import { notFound } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { ArrowDown } from "lucide-react";
 import Image from "next/image";
 import { blogs } from "@/app/api/route";
+import { useState } from "react";
 
 export default function BlogDetail({ params }: any) {
   const blog = blogs.find((b) => b.slug === params.slug);
@@ -20,6 +23,49 @@ export default function BlogDetail({ params }: any) {
     ): item is { sections: { id: string; title: string; body: string }[] } =>
       typeof item === "object" && item !== null && "sections" in item
   )?.sections;
+
+  const [comments, setComments] = useState(blog.comment ? [blog.comment] : []);
+  const [showForm, setShowForm] = useState(false);
+  const [commentTitle, setCommentTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [text, setText] = useState("");
+
+  const handleAddComment = () => {
+    if (!author.trim() || !text.trim() || !commentTitle.trim()) return;
+
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const dateObj = new Date();
+    const formattedDate = `${dateObj.getDate()} ${
+      months[dateObj.getMonth()]
+    } ${dateObj.getFullYear()}`;
+
+    const newComment = {
+      title: commentTitle,
+      text,
+      author,
+      authorImage: `https://github.com/${author.toLowerCase().replace(/\s+/g, "")}.png`,
+      date: formattedDate,
+    };
+
+    setComments((prev) => [...prev, newComment]);
+    setAuthor("");
+    setText("");
+    setCommentTitle("");
+    setShowForm(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#f9f5ff] flex flex-col">
@@ -94,47 +140,121 @@ export default function BlogDetail({ params }: any) {
         </div>
 
         {/* Comments Section */}
-        {blog.comment && (
+        {comments.length > 0 && (
           <div className="mt-16">
             <h2 className="text-2xl font-semibold text-[#1a1a1a] mb-6">
               Comments
             </h2>
-            <div className="border-t border-b border-[#e1dbee] bg-white px-10 py-6">
-              <h3 className="text-xl font-semibold text-[#1a1a1a] mb-3">
-                {blog.comment.title}
-              </h3>
-              <p className="text-[#4a4a4a] mb-4">{blog.comment.text}</p>
 
-              <div className="mt-auto flex justify-end gap-2">
-                <Avatar className="h-8 w-8 md:h-10 md:w-10">
-                  <AvatarImage src={blog.comment.authorImage} />
-                  <AvatarFallback>
-                    {blog.comment.author
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-xs md:text-sm font-medium">
-                    {blog.comment.author}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {blog.comment.date}
-                  </p>
+            {comments.map((comment, idx) => (
+              <div
+                key={idx}
+                className="border-t border-b border-[#e1dbee] bg-white px-10 py-6 mb-6"
+              >
+                <h3 className="text-xl font-semibold text-[#1a1a1a] mb-3">
+                  {comment.title}
+                </h3>
+                <p className="text-[#4a4a4a] mb-4">{comment.text}</p>
+
+                <div className="mt-auto flex justify-end gap-2">
+                  <Avatar className="h-8 w-8 md:h-10 md:w-10">
+                    <AvatarImage src={comment.authorImage} />
+                    <AvatarFallback>
+                      {comment.author
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-xs md:text-sm font-medium">
+                      {comment.author}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {comment.date}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            ))}
 
-            <div className="flex justify-end mt-6">
-              <Button
-                variant="ghost"
-                className="text-[#6941C6] bg-white cursor-pointer"
-              >
-                <ArrowDown className="h-4 w-4" />
-                Add Comment
-              </Button>
-            </div>
+            {!showForm && (
+              <div className="flex justify-end mt-6">
+                <Button
+                  variant="ghost"
+                  className="text-[#6941C6] bg-white cursor-pointer"
+                  onClick={() => setShowForm(true)}
+                >
+                  <ArrowDown className="h-4 w-4 mr-1" />
+                  Add Comment
+                </Button>
+              </div>
+            )}
+
+            {showForm && (
+              <div className="mt-6 bg-white border border-[#e1dbee] p-6 rounded-lg shadow-sm">
+                <h3 className="text-xl font-semibold mb-6 text-[#1a1a1a]">
+                  Add a Comment
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-[#4a4a4a] mb-1">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Give your comment a title"
+                      value={commentTitle}
+                      onChange={(e) => setCommentTitle(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#d2bfff]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#4a4a4a] mb-1">
+                      Comment
+                    </label>
+                    <textarea
+                      placeholder="Write your comment here..."
+                      value={text}
+                      onChange={(e) => setText(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#d2bfff]"
+                      rows={4}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-[#4a4a4a] mb-1">
+                      Your Name
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. George Costanza"
+                      value={author}
+                      onChange={(e) => setAuthor(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#d2bfff]"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 mt-6">
+                  <Button
+                    variant="ghost"
+                    className="text-gray-500 hover:text-gray-700 cursor-pointer"
+                    onClick={() => setShowForm(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleAddComment}
+                    className="bg-[#6941C6] text-white hover:bg-[#5a35a4] cursor-pointer"
+                  >
+                    Post Comment
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
